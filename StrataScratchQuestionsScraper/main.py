@@ -42,9 +42,12 @@ def authenticate():
         (By.CLASS_NAME, "HomeHero-module--titleBig--bc06d")))
 
 
-def scrape_question_description(url):
+def scrape_question(url):
     driver.get(url)
+    scrape_question_description()
+    scrape_question_tables()
 
+def scrape_question_description():
     header = WebDriverWait(driver, 10).until(expected_conditions.presence_of_element_located(
         (By.CSS_SELECTOR, '.QuestionMetadata__h1'))).text
 
@@ -63,6 +66,53 @@ def scrape_question_description(url):
     print()
 
 
+def scrape_question_tables():
+    tables_names_elements = WebDriverWait(driver, 10).until(expected_conditions.presence_of_all_elements_located(
+        (By.CLASS_NAME, "QuestionTables__table-name")))
+
+    tables_columns_elements = WebDriverWait(driver, 10).until(expected_conditions.presence_of_all_elements_located(
+        (By.CLASS_NAME, "DatasetTableTypes__container")))
+
+    tables = []
+
+    for i in range(0, len(tables_names_elements)):
+        name = tables_names_elements[i].text
+        columns = html_element_to_table_columns(tables_columns_elements[i])
+
+        table = Table(name, columns)
+        tables.append(table)
+
+    for table in tables:
+        table.display()
+
+
+def html_element_to_table_columns(element):
+    span_elements = element.find_elements(By.CSS_SELECTOR, 'span')
+
+    columns = {}
+
+    for i in range(0, len(span_elements), 2):
+        key = span_elements[i].text
+        key = key[:-1]
+
+        value = span_elements[i + 1].text
+        columns[key] = value
+
+    return columns
+
+
+class Table:
+    def __init__(self, name, columns):
+        self.name = name
+        self.columns = columns
+
+    def display(self):
+        print(f"Name: {self.name}")
+        print("Columns:")
+        for column_name, column_type in self.columns.items():
+            print(f"  {column_name}: {column_type}")
+
+
 email = 'idewishortcut@gmail.com'
 password = getpass('Password: ')
 
@@ -70,8 +120,8 @@ driver = create_driver(True)
 
 authenticate()
 
-scrape_question_description("https://platform.stratascratch.com/coding/10308-salaries-differences?code_type=3")
-scrape_question_description("https://platform.stratascratch.com/coding/10354-most-profitable-companies?code_type=3")
-scrape_question_description("https://platform.stratascratch.com/coding/10319-monthly-percentage-difference?code_type=3")
+scrape_question("https://platform.stratascratch.com/coding/10308-salaries-differences?code_type=3")
+#scrape_question("https://platform.stratascratch.com/coding/10354-most-profitable-companies?code_type=3")
+#scrape_question("https://platform.stratascratch.com/coding/10319-monthly-percentage-difference?code_type=3")
 
 driver.quit()
