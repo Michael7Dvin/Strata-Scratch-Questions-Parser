@@ -43,45 +43,45 @@ class Scraper:
 
     def scrape_question(self, url):
         self.driver.get(url)
-        self.scrape_question_description()
-        self.scrape_question_tables()
+        description = self.scrape_question_description()
+        tables = self.scrape_question_tables()
+
+        return self.Question(description, tables)
 
     def scrape_question_description(self):
-        header = WebDriverWait(self.driver, 10).until(expected_conditions.presence_of_element_located(
+        name = WebDriverWait(self.driver, 10).until(expected_conditions.presence_of_element_located(
             (By.CSS_SELECTOR, '.QuestionMetadata__h1'))).text
 
         metadata_element = WebDriverWait(self.driver, 10).until(expected_conditions.presence_of_element_located(
             (By.CSS_SELECTOR, '.QuestionMetadata__metadata')))
 
-        company_name = metadata_element.find_element(By.CSS_SELECTOR, 'div').text
+        company = metadata_element.find_element(By.CSS_SELECTOR, 'div').text
         difficulty = metadata_element.find_element(By.CSS_SELECTOR, '[class^="QuestionDifficulty--"]').text
 
         description = WebDriverWait(self.driver, 10).until(expected_conditions.presence_of_element_located(
             (By.CSS_SELECTOR, '.QuestionMetadata__question'))).find_element(By.CSS_SELECTOR, 'p').text
 
-        print(header)
-        print(company_name, difficulty)
-        print(description)
-        print()
+        question_description = self.Description(name, company, difficulty, description)
+
+        return question_description
 
     def scrape_question_tables(self):
-        tables_names_elements = WebDriverWait(self.driver, 10).until(expected_conditions.presence_of_all_elements_located(
+        names_elements = WebDriverWait(self.driver, 10).until(expected_conditions.presence_of_all_elements_located(
             (By.CLASS_NAME, "QuestionTables__table-name")))
 
-        tables_columns_elements = WebDriverWait(self.driver, 10).until(expected_conditions.presence_of_all_elements_located(
+        columns_elements = WebDriverWait(self.driver, 10).until(expected_conditions.presence_of_all_elements_located(
             (By.CLASS_NAME, "DatasetTableTypes__container")))
 
         tables = []
 
-        for i in range(0, len(tables_names_elements)):
-            name = tables_names_elements[i].text
-            columns = self.html_element_to_table_columns(tables_columns_elements[i])
+        for i in range(0, len(names_elements)):
+            name = names_elements[i].text
+            columns = self.html_element_to_table_columns(columns_elements[i])
 
             table = self.Table(name, columns)
             tables.append(table)
 
-        for table in tables:
-            table.display()
+        return tables
 
     def html_element_to_table_columns(self, element):
         span_elements = element.find_elements(By.CSS_SELECTOR, 'span')
@@ -100,13 +100,35 @@ class Scraper:
     def quit_driver(self):
         self.driver.quit()
 
+    class Description:
+        def __init__(self, name, company, difficulty, description):
+            self.name = name
+            self.company = company
+            self.difficulty = difficulty
+            self.description = description
+
     class Table:
         def __init__(self, name, columns):
             self.name = name
             self.columns = columns
 
-        def display(self):
-            print(f"Name: {self.name}")
-            print("Columns:")
+        def display_columns(self):
             for column_name, column_type in self.columns.items():
                 print(f"  {column_name}: {column_type}")
+
+    class Question:
+        def __init__(self, description, tables):
+            self.description = description
+            self.tables = tables
+
+        def display(self):
+            print()
+            print(f"-----{self.description.name}-----")
+            print(f"{self.description.company}"
+                  f"{' ' * (len(self.description.name) + 10 - len(self.description.company) - len(self.description.difficulty))}"
+                  f"{self.description.difficulty}")
+
+            for table in self.tables:
+                print()
+                print(table.name)
+                table.display_columns()
