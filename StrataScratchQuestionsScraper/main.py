@@ -7,6 +7,8 @@ password = getpass('Password: ')
 
 scraper = Scraper(False)
 
+scraper.authenticate(email, password)
+
 question1 = scraper.scrape_question("https://platform.stratascratch.com/coding/10308-salaries-differences?code_type=3")
 #scrape_question("https://platform.stratascratch.com/coding/10354-most-profitable-companies?code_type=3")
 #scrape_question("https://platform.stratascratch.com/coding/10319-monthly-percentage-difference?code_type=3")

@@ -1,3 +1,5 @@
+import time
+
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
@@ -66,24 +68,32 @@ class Scraper:
         return question_description
 
     def scrape_question_tables(self):
-        names_elements = WebDriverWait(self.driver, 10).until(expected_conditions.presence_of_all_elements_located(
-            (By.CLASS_NAME, "QuestionTables__table-name")))
+        headers_elements = WebDriverWait(self.driver, 10).until(expected_conditions.presence_of_all_elements_located(
+            (By.CLASS_NAME, 'QuestionTables__header')))
+
+        tables = []
+
+        for i in range(0, len(headers_elements)):
+            headers_elements[i].find_element(By.CLASS_NAME, 'QuestionTables__preview-btn').click()
 
         columns_elements = WebDriverWait(self.driver, 10).until(expected_conditions.presence_of_all_elements_located(
             (By.CLASS_NAME, "DatasetTableTypes__container")))
 
-        tables = []
+        tables_elements = WebDriverWait(self.driver, 10).until(expected_conditions.presence_of_all_elements_located(
+            (By.CLASS_NAME, 'ResultsTable__table')))
 
-        for i in range(0, len(names_elements)):
-            name = names_elements[i].text
-            columns = self.html_element_to_table_columns(columns_elements[i])
+        for i in range(0, len(headers_elements)):
+            name = headers_elements[i].find_element(By.CLASS_NAME, 'QuestionTables__table-name').text
 
-            table = self.Table(name, columns)
+            columns = self.html_columns_to_table_columns(columns_elements[i])
+            rows = self.html_table_to_table_rows(tables_elements[i], len(columns))
+
+            table = self.Table(name, columns, rows)
             tables.append(table)
 
         return tables
 
-    def html_element_to_table_columns(self, element):
+    def html_columns_to_table_columns(self, element):
         span_elements = element.find_elements(By.CSS_SELECTOR, 'span')
 
         columns = {}
@@ -97,6 +107,19 @@ class Scraper:
 
         return columns
 
+    def html_table_to_table_rows(self, element, columns_count):
+        cells_elements = element.find_elements(By.CLASS_NAME, 'ResultsTable__cell')
+
+        cells = [cell_element.text for cell_element in cells_elements]
+
+        rows = []
+
+        for i in range(0, len(cells), columns_count):
+            row = cells[i:i + columns_count]
+            rows.append(row)
+
+        return rows
+
     def quit_driver(self):
         self.driver.quit()
 
@@ -108,13 +131,18 @@ class Scraper:
             self.description = description
 
     class Table:
-        def __init__(self, name, columns):
+        def __init__(self, name, columns, rows):
             self.name = name
             self.columns = columns
+            self.rows = rows
 
         def display_columns(self):
             for column_name, column_type in self.columns.items():
-                print(f"  {column_name}: {column_type}")
+                print(f"{column_name}: {column_type}")
+
+        def display_rows(self):
+            for row in self.rows:
+                print(row)
 
     class Question:
         def __init__(self, description, tables):
@@ -127,8 +155,11 @@ class Scraper:
             print(f"{self.description.company}"
                   f"{' ' * (len(self.description.name) + 10 - len(self.description.company) - len(self.description.difficulty))}"
                   f"{self.description.difficulty}")
+            print(self.description.description)
 
             for table in self.tables:
                 print()
                 print(table.name)
                 table.display_columns()
+                print()
+                table.display_rows()
