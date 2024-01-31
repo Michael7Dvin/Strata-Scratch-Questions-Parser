@@ -1,9 +1,7 @@
-import time
-
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions
+from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 
 
@@ -25,22 +23,22 @@ class Scraper:
     def authenticate(self, email, password):
         self.driver.get('https://www.stratascratch.com/')
 
-        login_link = WebDriverWait(self.driver, 10).until(expected_conditions.presence_of_element_located(
+        login_link = WebDriverWait(self.driver, 10).until(EC.presence_of_element_located(
             (By.LINK_TEXT, 'Login')))
         login_link.click()
 
-        email_input = WebDriverWait(self.driver, 10).until(expected_conditions.presence_of_element_located(
+        email_input = WebDriverWait(self.driver, 10).until(EC.presence_of_element_located(
             (By.NAME, 'username')))
         email_input.send_keys(email)
 
-        password_input = WebDriverWait(self.driver, 10).until(expected_conditions.presence_of_element_located(
+        password_input = WebDriverWait(self.driver, 10).until(EC.presence_of_element_located(
             (By.NAME, 'password')))
         password_input.send_keys(password)
 
-        WebDriverWait(self.driver, 10).until(expected_conditions.presence_of_element_located(
+        WebDriverWait(self.driver, 10).until(EC.presence_of_element_located(
             (By.CLASS_NAME, "AuthFormButton"))).click()
 
-        WebDriverWait(self.driver, 10).until(expected_conditions.presence_of_element_located(
+        WebDriverWait(self.driver, 10).until(EC.presence_of_element_located(
             (By.CLASS_NAME, "HomeHero-module--titleBig--bc06d")))
 
     def scrape_question(self, url):
@@ -51,16 +49,16 @@ class Scraper:
         return self.Question(description, tables)
 
     def scrape_question_description(self):
-        name = WebDriverWait(self.driver, 10).until(expected_conditions.presence_of_element_located(
+        name = WebDriverWait(self.driver, 10).until(EC.presence_of_element_located(
             (By.CSS_SELECTOR, '.QuestionMetadata__h1'))).text
 
-        metadata_element = WebDriverWait(self.driver, 10).until(expected_conditions.presence_of_element_located(
+        metadata_element = WebDriverWait(self.driver, 10).until(EC.presence_of_element_located(
             (By.CSS_SELECTOR, '.QuestionMetadata__metadata')))
 
         company = metadata_element.find_element(By.CSS_SELECTOR, 'div').text
         difficulty = metadata_element.find_element(By.CSS_SELECTOR, '[class^="QuestionDifficulty--"]').text
 
-        description = WebDriverWait(self.driver, 10).until(expected_conditions.presence_of_element_located(
+        description = WebDriverWait(self.driver, 10).until(EC.presence_of_element_located(
             (By.CSS_SELECTOR, '.QuestionMetadata__question'))).find_element(By.CSS_SELECTOR, 'p').text
 
         question_description = self.Description(name, company, difficulty, description)
@@ -68,25 +66,25 @@ class Scraper:
         return question_description
 
     def scrape_question_tables(self):
-        headers_elements = WebDriverWait(self.driver, 10).until(expected_conditions.presence_of_all_elements_located(
+        headers_elements = WebDriverWait(self.driver, 10).until(EC.presence_of_all_elements_located(
             (By.CLASS_NAME, 'QuestionTables__header')))
 
         tables = []
 
+        columns_elements = WebDriverWait(self.driver, 10).until(EC.presence_of_all_elements_located(
+            (By.CLASS_NAME, "DatasetTableTypes__container")))
+
         for i in range(0, len(headers_elements)):
             headers_elements[i].find_element(By.CLASS_NAME, 'QuestionTables__preview-btn').click()
 
-        columns_elements = WebDriverWait(self.driver, 10).until(expected_conditions.presence_of_all_elements_located(
-            (By.CLASS_NAME, "DatasetTableTypes__container")))
+            table_element = WebDriverWait(headers_elements[i], 10).until(EC.presence_of_element_located(
+                (By.XPATH, "following-sibling::div[not(@class)]")))\
+                .find_element(By.CLASS_NAME, 'ResultsTable__container')\
+                .find_element(By.CLASS_NAME, 'ResultsTable__table')
 
-        tables_elements = WebDriverWait(self.driver, 10).until(expected_conditions.presence_of_all_elements_located(
-            (By.CLASS_NAME, 'ResultsTable__table')))
-
-        for i in range(0, len(headers_elements)):
             name = headers_elements[i].find_element(By.CLASS_NAME, 'QuestionTables__table-name').text
-
             columns = self.html_columns_to_table_columns(columns_elements[i])
-            rows = self.html_table_to_table_rows(tables_elements[i], len(columns))
+            rows = self.html_table_to_table_rows(table_element, len(columns))
 
             table = self.Table(name, columns, rows)
             tables.append(table)
