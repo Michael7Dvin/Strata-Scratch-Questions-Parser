@@ -10,12 +10,20 @@ scraper = Scraper(False)
 
 scraper.authenticate(email, password)
 
-question1 = scraper.scrape_question\
-    ("https://platform.stratascratch.com/coding/10353-workers-with-the-highest-salaries?code_type=3")
 
-question1.display()
+urls = \
+    [
+        'https://platform.stratascratch.com/coding/10159-ranking-most-active-guests?code_type=1',
+        'https://platform.stratascratch.com/coding/10156-number-of-units-per-nationality?code_type=1',
+        'https://platform.stratascratch.com/coding/10303-top-percentile-fraud?code_type=1',
+        'https://platform.stratascratch.com/coding/10300-premium-vs-freemium?code_type=1',
+        'https://platform.stratascratch.com/coding/10299-finding-updated-records?code_type=1',
+    ]
 
-db_operations.add_question_to_db(question1)
+for url in urls:
+    question = scraper.scrape_question(url)
+    question.display()
+    db_operations.add_question_to_db(question)
 
 scraper.quit_driver()
 db_operations.close_connection()

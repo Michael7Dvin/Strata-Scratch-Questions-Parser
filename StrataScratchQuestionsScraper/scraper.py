@@ -75,7 +75,8 @@ class Scraper:
             (By.CLASS_NAME, "DatasetTableTypes__container")))
 
         for i in range(0, len(headers_elements)):
-            headers_elements[i].find_element(By.CLASS_NAME, 'QuestionTables__preview-btn').click()
+            WebDriverWait(headers_elements[i], 10).until(EC.element_to_be_clickable(
+                (By.CLASS_NAME, 'QuestionTables__preview-btn'))).click()
 
             table_element = WebDriverWait(headers_elements[i], 10).until(EC.presence_of_element_located(
                 (By.XPATH, "following-sibling::div[not(@class)]")))\
