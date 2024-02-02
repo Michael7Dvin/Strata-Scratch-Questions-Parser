@@ -13,11 +13,12 @@ scraper.authenticate(email, password)
 
 urls = \
     [
-        'https://platform.stratascratch.com/coding/10159-ranking-most-active-guests?code_type=1',
-        'https://platform.stratascratch.com/coding/10156-number-of-units-per-nationality?code_type=1',
-        'https://platform.stratascratch.com/coding/10303-top-percentile-fraud?code_type=1',
-        'https://platform.stratascratch.com/coding/10300-premium-vs-freemium?code_type=1',
-        'https://platform.stratascratch.com/coding/10299-finding-updated-records?code_type=1',
+        'https://platform.stratascratch.com/coding/10353-workers-with-the-highest-salaries?code_type=3',
+        # 'https://platform.stratascratch.com/coding/10356-finding-doctors?code_type=3',
+        # 'https://platform.stratascratch.com/coding/10355-employees-with-same-birth-month?code_type=3',
+        # 'https://platform.stratascratch.com/coding/10354-most-profitable-companies?code_type=3',
+        # 'https://platform.stratascratch.com/coding/10353-workers-with-the-highest-salaries?code_type=3',
+        # 'https://platform.stratascratch.com/coding/10352-users-by-avg-session-time?code_type=3',
     ]
 
 for url in urls:
